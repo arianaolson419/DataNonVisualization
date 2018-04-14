@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import sounddevice as sd
 from scipy.io import wavfile
+import sys
+import msvcrt, time
+import keyhit as keyhit #thanks Washington and Lee university
 
 def change_music(wav):
     fs, musicdata = wavfile.read(wav); #save the sampling frequency and the numpy array of frequency numbers
@@ -121,15 +124,55 @@ def play_slope(slopes,fs):
                 #     r, d = wavfile.read("C.wav")
                 # sd.play(d, r, blocking=True)
 
+def FastForward():
+    #This function will let you move forward in the dataset, I'm hoping
+    pass
+
+def Rewind():
+    #This function will let you move backwards in the dataset, I'm hoping
+    pass
+
+
 if __name__ == "__main__":
-    filepath = "mvp.csv"
-    fs = 44100
-    x, y = get_csv_data(filepath)
-    slopes = find_slopes(x, y)
-    # Plot the slopes to verify they are correct
-    plt.plot(slopes)
-    plt.show()
-    rc, dc = wavfile.read("Ctone.wav")
-    re, de = wavfile.read("Etone.wav")
-    ra, da = wavfile.read("Atone.wav")
-    play_slope(slopes, fs)
+    paused = False
+    key = keyhit.KBHit()
+    while True:
+        if paused == False:
+            while (paused == False):
+                pausearrow = key.getarrow()
+                # 0 : up
+                # 1 : right
+                # 2 : down
+                # 3 : left
+                if pausearrow== 2:
+                    print("PAUSE")
+                    paused = True
+                    break
+                time.sleep(0.1)
+        if paused == True:
+            playarrow = key.getarrow()
+            while paused:
+                if playarrow == 0:
+                    #hit up to play again
+                    print ("PLAY")
+                    paused = False
+                    break
+                elif playarrow == 1:
+                    #hit right to go forward in the data
+                    print("Fast Forward")
+                    FastForward()
+                    break
+                elif playarrow == 3:
+                    #hit left to go backwards in the data
+                    print("Rewind")
+                    Rewind()
+                    break
+                elif playarrow == 2:
+                    #if you hit pause again, then unpause
+                    print ("PLAY")
+                    paused = False
+                    break
+                print(" .. ")
+                time.sleep(0.1)
+        else:
+            print(" . ")
