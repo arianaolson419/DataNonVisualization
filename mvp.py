@@ -8,6 +8,7 @@ from scipy.io import wavfile
 
 # Audio manipulation library
 from aupyom import Sampler, Sound
+import time
 
 def change_music(wav):
     fs, musicdata = wavfile.read(wav); #save the sampling frequency and the numpy array of frequency numbers
@@ -155,6 +156,20 @@ def play_slope(slopes,fs):
                 # else:
                 #     r, d = wavfile.read("C.wav")
                 # sd.play(d, r, blocking=True)
+def play_from_point(sound, pitch_shifts, speed, x_coord=0):
+    """Plays the tone pitchshifted coresponding to a starting point in the data
+    Parameters
+    ----------
+    sound : the aupyom sound being played
+    pitch_shifts : an array of the pitch shifts corresponding to the data
+    speed : the number of data points per second to be played
+    x_coord : the starting x_coordinate at which to play the sound
+    """
+    for pitch in pitch_shifts[0:]:
+        sound.pitch_shift = pitch
+        print(pitch)
+        time.sleep(1000 / speed)
+
 
 if __name__ == "__main__":
     filepath = "mvp.csv"
@@ -169,12 +184,13 @@ if __name__ == "__main__":
 #    ra, da = wavfile.read("Atone.wav")
 #    play_slope(slopes, fs)
     randvar = np.random.normal(0, 1, 100)
-    binned = bin_data(randvar, 10, .5)
+    binned = bin_data(y, 10, .5)
     
-    plt.plot(randvar, '*')
+    plt.plot(y, '*')
     plt.plot(binned, '.')
     plt.show()
-    #sampler = Sampler()
-    #s1 = Sound.from_file("A.wav")
+    sampler = Sampler()
+    s1 = Sound.from_file("A.wav")
 
-    #sampler.play(s1)
+    sampler.play(s1)
+    play_from_point(s1, binned, 1)
