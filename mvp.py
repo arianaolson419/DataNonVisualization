@@ -7,7 +7,7 @@ import sounddevice as sd
 from scipy.io import wavfile
 import sys
 import msvcrt, time
-import keyhit as keyhit
+import keyhit as keyhit #thanks Washington and Lee university
 
 def change_music(wav):
     fs, musicdata = wavfile.read(wav); #save the sampling frequency and the numpy array of frequency numbers
