@@ -2,6 +2,8 @@
 """
 import numpy as np
 import pandas as pd
+from scipy.io import wavfile
+import sounddevice as sd
 
 def get_csv_data():
     """Extract x and y values from a csv file.
@@ -29,3 +31,16 @@ def find_slopes():
     consecutive points.
     """
     pass
+
+def make_sounds(slopeChange):
+    """Plays a tone wavefile based on up, same, or down input
+    ----------
+    slopeChange : up, same, or down input in slope 
+
+    Returns
+    -------
+    Nothing, plays wavfile
+    """
+    pass
+
+
