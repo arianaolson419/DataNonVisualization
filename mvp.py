@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import sounddevice as sd
 from scipy.io import wavfile
+import sys
+import msvcrt, time
+import keyhit as keyhit #thanks Washington and Lee university
 
 # Audio manipulation library
 from aupyom import Sampler, Sound
@@ -171,7 +174,17 @@ def play_from_point(sound, pitch_shifts, speed, x_coord=0):
         time.sleep(1 / speed)
 
 
+def FastForward():
+    #This function will let you move forward in the dataset, I'm hoping
+    pass
+
+def Rewind():
+    #This function will let you move backwards in the dataset, I'm hoping
+    pass
+
+
 if __name__ == "__main__":
+
     filepath = "mvp.csv"
     fs = 44100
     x, y = get_csv_data(filepath)
@@ -194,3 +207,4 @@ if __name__ == "__main__":
 
     sampler.play(s1)
     play_from_point(s1, binned, 1)
+
