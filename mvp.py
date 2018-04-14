@@ -41,6 +41,13 @@ def make_sounds(slopeChange):
     -------
     Nothing, plays wavfile
     """
-    pass
+    if slopeChange > 0:
+        r, d = wavfile.read("E.wav")
+    elif slopeChange < 0:
+        r, d = wavfile.read("A.wav")
+    else:
+        r, d = wavfile.read("C.wav")
+    sd.play(d, r, blocking=True)
 
-
+if __name__ == "__main__":
+   make_sounds(1)
