@@ -6,6 +6,9 @@ import pandas as pd
 import sounddevice as sd
 from scipy.io import wavfile
 
+# Audio manipulation library
+from aupyom import Sampler, Sound
+
 def change_music(wav):
     fs, musicdata = wavfile.read(wav); #save the sampling frequency and the numpy array of frequency numbers
     return musicdata
@@ -46,8 +49,6 @@ def bin_data(y, num_bins, std_away):
     std = np.std(y)
     pitch_shifts = np.arange(-num_bins, num_bins + 1)
     thresholds = (std * std_away) * pitch_shifts + mean
-    print('std', std)
-    print(thresholds, '<-- thresholds')
 
     result = []
     for point in y:
@@ -59,9 +60,7 @@ def bin_data(y, num_bins, std_away):
             for i in range(len(thresholds) - 1):
                 if point >= thresholds[i] and point < thresholds[i + 1]:
                     result.append(i - num_bins)
-    plt.plot(result, '.')
-    plt.plot(y, '.')
-    plt.show()
+    return np.array(result)
 
 def find_slopes(x, y):
     """finds the slopes between each point in the data
@@ -170,4 +169,12 @@ if __name__ == "__main__":
 #    ra, da = wavfile.read("Atone.wav")
 #    play_slope(slopes, fs)
     randvar = np.random.normal(0, 1, 100)
-    bin_data(randvar, 10, .5)
+    binned = bin_data(randvar, 10, .5)
+    
+    plt.plot(randvar, '*')
+    plt.plot(binned, '.')
+    plt.show()
+    #sampler = Sampler()
+    #s1 = Sound.from_file("A.wav")
+
+    #sampler.play(s1)
