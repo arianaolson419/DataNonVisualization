@@ -9,6 +9,10 @@ import sys
 import msvcrt, time
 import keyhit as keyhit #thanks Washington and Lee university
 
+# Audio manipulation library
+from aupyom import Sampler, Sound
+import time
+
 def change_music(wav):
     fs, musicdata = wavfile.read(wav); #save the sampling frequency and the numpy array of frequency numbers
     return musicdata
@@ -31,6 +35,36 @@ def get_csv_data(filepath):
     x = csv_df.iloc[:, 0]
     y = csv_df.iloc[:, 1]
     return x, y
+
+def bin_data(y, num_bins, std_away):
+    """Places indices of data points into bins to play discrete sounds
+    Parameters
+    ----------
+    y : the y axis coordinates of the data
+    num_bins : the number of bins above the mean that the data is separated into (in addition
+    to two outlier bins.
+    std_away : the width of the bins
+
+    Returns
+    -------
+    a numpy array of signed integers representing pitch shifts
+    """
+    mean = np.mean(y)
+    std = np.std(y)
+    pitch_shifts = np.arange(-num_bins, num_bins + 1)
+    thresholds = (std * std_away) * pitch_shifts + mean
+
+    result = []
+    for point in y:
+        if point < thresholds[0]:
+            result.append(pitch_shifts[0] - 1)
+        elif point > thresholds[-1]:
+            result.append(pitch_shifts[-1] + 1)
+        else:
+            for i in range(len(thresholds) - 1):
+                if point >= thresholds[i] and point < thresholds[i + 1]:
+                    result.append(i - num_bins)
+    return np.array(result)
 
 def find_slopes(x, y):
     """finds the slopes between each point in the data
@@ -64,7 +98,9 @@ def stretch(sound_array, f, window_size, h):
 
     phase  = np.zeros(window_size)
     hanning_window = np.hanning(window_size)
-    result = np.zeros( (len(sound_array) /f + window_size), dtype=np.int32)
+    size_result = int(len(sound_array) / f + window_size)
+    result = np.zeros(size_result)
+    print(result.size)
 
     for i in np.arange(0, len(sound_array)-(window_size+h), h*f):
 
@@ -80,7 +116,7 @@ def stretch(sound_array, f, window_size, h):
 
         # add to result
         i2 = int(i/f)
-        result[i2 : i2 + window_size] += hanning_window*a2_rephased
+        result[i2 : i2 + window_size] += hanning_window*a2_rephased.astype(np.float64).flatten()
 
     result = ((2**(16-4)) * result/result.max()) # normalize (16bit)
 
@@ -99,8 +135,8 @@ def play_slope(slopes,fs):
 
     fast = speedx(de[:re], 1.5)
     slow = speedx(de[:re], 0.75)
-    #fast = stretch(de[:re], 1, 1, 1)
-    #slow = stretch(de[:re], 2, 1, 1)
+    fast = stretch(de[:re], 1, 1, 1)
+    slow = stretch(de[:re], 2, 1, 1)
     for i in range(len(x)-1):
         if slopes[i]>0:
             sd.play(slow, re, blocking=True)
@@ -123,6 +159,20 @@ def play_slope(slopes,fs):
                 # else:
                 #     r, d = wavfile.read("C.wav")
                 # sd.play(d, r, blocking=True)
+def play_from_point(sound, pitch_shifts, speed, x_coord=0):
+    """Plays the tone pitchshifted coresponding to a starting point in the data
+    Parameters
+    ----------
+    sound : the aupyom sound being played
+    pitch_shifts : an array of the pitch shifts corresponding to the data
+    speed : the number of data points per second to be played
+    x_coord : the starting x_coordinate at which to play the sound
+    """
+    for pitch in pitch_shifts[0:]:
+        sound.pitch_shift = pitch
+        print(pitch)
+        time.sleep(1 / speed)
+
 
 def FastForward():
     #This function will let you move forward in the dataset, I'm hoping
@@ -134,45 +184,27 @@ def Rewind():
 
 
 if __name__ == "__main__":
-    paused = False
-    key = keyhit.KBHit()
-    while True:
-        if paused == False:
-            while (paused == False):
-                pausearrow = key.getarrow()
-                # 0 : up
-                # 1 : right
-                # 2 : down
-                # 3 : left
-                if pausearrow== 2:
-                    print("PAUSE")
-                    paused = True
-                    break
-                time.sleep(0.1)
-        if paused == True:
-            playarrow = key.getarrow()
-            while paused:
-                if playarrow == 0:
-                    #hit up to play again
-                    print ("PLAY")
-                    paused = False
-                    break
-                elif playarrow == 1:
-                    #hit right to go forward in the data
-                    print("Fast Forward")
-                    FastForward()
-                    break
-                elif playarrow == 3:
-                    #hit left to go backwards in the data
-                    print("Rewind")
-                    Rewind()
-                    break
-                elif playarrow == 2:
-                    #if you hit pause again, then unpause
-                    print ("PLAY")
-                    paused = False
-                    break
-                print(" .. ")
-                time.sleep(0.1)
-        else:
-            print(" . ")
+
+    filepath = "mvp.csv"
+    fs = 44100
+    x, y = get_csv_data(filepath)
+    slopes = find_slopes(x, y)
+    # Plot the slopes to verify they are correct
+#    plt.plot(slopes)
+#    plt.show()
+#    rc, dc = wavfile.read("Ctone.wav")
+#    re, de = wavfile.read("Etone.wav")
+#    ra, da = wavfile.read("Atone.wav")
+#    play_slope(slopes, fs)
+    randvar = np.random.normal(0, 1, 100)
+    binned = bin_data(y, 10, .5)
+    
+    plt.plot(y, '*')
+    plt.plot(binned, '.')
+    plt.show()
+    sampler = Sampler()
+    s1 = Sound.from_file("A.wav")
+
+    sampler.play(s1)
+    play_from_point(s1, binned, 1)
+
