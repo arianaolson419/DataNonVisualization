@@ -49,6 +49,40 @@ def find_slopes(x, y):
         slopes[i] = delta_y / delta_x
     return slopes
 
+    
+def speedx(sound_array, factor):
+    """ Multiplies the sound's speed by some `factor` """
+    indices = np.round( np.arange(0, len(sound_array), factor) )
+    indices = indices[indices < len(sound_array)].astype(int)
+    return sound_array[ indices.astype(int) ]
+
+def stretch(sound_array, f, window_size, h):
+    """ Stretches the sound by a factor `f` """
+
+    phase  = np.zeros(window_size)
+    hanning_window = np.hanning(window_size)
+    result = np.zeros( (len(sound_array) /f + window_size), dtype=np.int32)
+
+    for i in np.arange(0, len(sound_array)-(window_size+h), h*f):
+
+        # two potentially overlapping subarrays
+        a1 = sound_array[i: i + window_size]
+        a2 = sound_array[i + h: i + window_size + h]
+
+        # resynchronize the second array on the first
+        s1 =  np.fft.fft(hanning_window * a1)
+        s2 =  np.fft.fft(hanning_window * a2)
+        phase = (phase + np.angle(s2/s1)) % 2*np.pi
+        a2_rephased = np.fft.ifft(np.abs(s2)*np.exp(1j*phase))
+
+        # add to result
+        i2 = int(i/f)
+        result[i2 : i2 + window_size] += hanning_window*a2_rephased
+
+    result = ((2**(16-4)) * result/result.max()) # normalize (16bit)
+
+    return result.astype('int16')
+
 def play_slope(slopes,fs):
     # """Plays a tone wavefile based on up, same, or down input
     # A = negative tone
@@ -60,16 +94,20 @@ def play_slope(slopes,fs):
     # -------
     # Nothing, plays wavfile""
 
+    fast = speedx(de[:re], 1.5)
+    slow = speedx(de[:re], 0.75)
+    #fast = stretch(de[:re], 1, 1, 1)
+    #slow = stretch(de[:re], 2, 1, 1)
     for i in range(len(x)-1):
         if slopes[i]>0:
-            sd.play(de[:re], re, blocking=True)
+            sd.play(slow, re, blocking=True)
             print("positive")
         elif slopes[i] == 0:
-            sd.play(dc[:rc], rc, blocking=True)
+            sd.play(dc[:re], re, blocking=True)
             #sd.play(c_array, fs)
             print('zero')
         elif slopes[i] < 0:
-            sd.play(da[:ra], ra, blocking=True)
+            sd.play(fast, re, blocking=True)
             #sd.play(a_array, fs)
             print('negative')
         else:
