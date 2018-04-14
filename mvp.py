@@ -49,7 +49,7 @@ def find_slopes(x, y):
         slopes[i] = delta_y / delta_x
     return slopes
 
-def play_slope(slopes, a_array, e_array, c_array, fs):
+def play_slope(slopes,fs):
     # """Plays a tone wavefile based on up, same, or down input
     # A = negative tone
     # E = Positive Atone
@@ -62,16 +62,26 @@ def play_slope(slopes, a_array, e_array, c_array, fs):
 
     for i in range(len(x)-1):
         if slopes[i]>0:
-            sd.play(e_array, fs)
+            sd.play(de[:re], re, blocking=True)
             print("positive")
         elif slopes[i] == 0:
-            sd.play(c_array, fs)
+            sd.play(dc[:rc], rc, blocking=True)
+            #sd.play(c_array, fs)
             print('zero')
         elif slopes[i] < 0:
-            sd.play(a_array, fs)
+            sd.play(da[:ra], ra, blocking=True)
+            #sd.play(a_array, fs)
             print('negative')
         else:
             print("Not a slope?")
+
+                # if slopeChange > 0:
+                #     r, d = wavfile.read("E.wav")
+                # elif slopeChange < 0:
+                #     r, d = wavfile.read("A.wav")
+                # else:
+                #     r, d = wavfile.read("C.wav")
+                # sd.play(d, r, blocking=True)
 
 if __name__ == "__main__":
     filepath = "mvp.csv"
@@ -81,7 +91,7 @@ if __name__ == "__main__":
     # Plot the slopes to verify they are correct
     plt.plot(slopes)
     plt.show()
-    a_array = change_music('Atone.wav')
-    e_array = change_music('Etone.wav')
-    c_array = change_music('Ctone.wav')
-    play_slope(slopes, a_array, e_array, c_array, fs)
+    rc, dc = wavfile.read("Ctone.wav")
+    re, de = wavfile.read("Etone.wav")
+    ra, da = wavfile.read("Atone.wav")
+    play_slope(slopes, fs)
