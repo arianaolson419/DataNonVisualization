@@ -1,9 +1,10 @@
-"""This is an MVP
+"""The MVP: Play a different tone for positive and negative slopes.
 """
 import numpy as np
+import matplotlib.pyplot as plt
 import pandas as pd
 
-def get_csv_data():
+def get_csv_data(filepath):
     """Extract x and y values from a csv file.
     Parameters
     ----------
@@ -14,9 +15,15 @@ def get_csv_data():
     x : the x coordinates
     y : the y coordinates
     """
-    pass
+    # Read the csv file into a pands dataframe
+    csv_df = pd.read_csv(filepath) 
 
-def find_slopes():
+    # Read the columns into coordinate arrays
+    x = csv_df.iloc[:, 0]
+    y = csv_df.iloc[:, 1]
+    return x, y
+
+def find_slopes(x, y):
     """finds the slopes between each point in the data
     Parameters
     ----------
@@ -28,4 +35,18 @@ def find_slopes():
     slopes : a numpy array with each element being the slope between
     consecutive points.
     """
-    pass
+    slopes = np.zeros((len(x) - 1))
+    for i in range(len(x) - 1):
+        # m = (y2 - y1) / (x2 - x1)
+        delta_x = x[i + 1] - x[i]
+        delta_y = y[i + 1] - y[i]
+        slopes[i] = delta_y / delta_x 
+    return slopes
+
+if __name__ == "__main__":
+    filepath = "mvp.csv"
+    x, y = get_csv_data(filepath)
+    slopes = find_slopes(x, y)
+    # Plot the slopes to verify they are correct
+    plt.plot(slopes)
+    plt.show()
