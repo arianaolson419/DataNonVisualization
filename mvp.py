@@ -29,6 +29,40 @@ def get_csv_data(filepath):
     y = csv_df.iloc[:, 1]
     return x, y
 
+def bin_data(y, num_bins, std_away):
+    """Places indices of data points into bins to play discrete sounds
+    Parameters
+    ----------
+    y : the y axis coordinates of the data
+    num_bins : the number of bins above the mean that the data is separated into (in addition
+    to two outlier bins.
+    std_away : the width of the bins
+
+    Returns
+    -------
+    a numpy array of signed integers representing pitch shifts
+    """
+    mean = np.mean(y)
+    std = np.std(y)
+    pitch_shifts = np.arange(-num_bins, num_bins + 1)
+    thresholds = (std * std_away) * pitch_shifts + mean
+    print('std', std)
+    print(thresholds, '<-- thresholds')
+
+    result = []
+    for point in y:
+        if point < thresholds[0]:
+            result.append(pitch_shifts[0] - 1)
+        elif point > thresholds[-1]:
+            result.append(pitch_shifts[-1] + 1)
+        else:
+            for i in range(len(thresholds) - 1):
+                if point >= thresholds[i] and point < thresholds[i + 1]:
+                    result.append(i - num_bins)
+    plt.plot(result, '.')
+    plt.plot(y, '.')
+    plt.show()
+
 def find_slopes(x, y):
     """finds the slopes between each point in the data
     Parameters
@@ -61,7 +95,9 @@ def stretch(sound_array, f, window_size, h):
 
     phase  = np.zeros(window_size)
     hanning_window = np.hanning(window_size)
-    result = np.zeros( (len(sound_array) /f + window_size), dtype=np.int32)
+    size_result = int(len(sound_array) / f + window_size)
+    result = np.zeros(size_result)
+    print(result.size)
 
     for i in np.arange(0, len(sound_array)-(window_size+h), h*f):
 
@@ -77,7 +113,7 @@ def stretch(sound_array, f, window_size, h):
 
         # add to result
         i2 = int(i/f)
-        result[i2 : i2 + window_size] += hanning_window*a2_rephased
+        result[i2 : i2 + window_size] += hanning_window*a2_rephased.astype(np.float64).flatten()
 
     result = ((2**(16-4)) * result/result.max()) # normalize (16bit)
 
@@ -96,8 +132,8 @@ def play_slope(slopes,fs):
 
     fast = speedx(de[:re], 1.5)
     slow = speedx(de[:re], 0.75)
-    #fast = stretch(de[:re], 1, 1, 1)
-    #slow = stretch(de[:re], 2, 1, 1)
+    fast = stretch(de[:re], 1, 1, 1)
+    slow = stretch(de[:re], 2, 1, 1)
     for i in range(len(x)-1):
         if slopes[i]>0:
             sd.play(slow, re, blocking=True)
@@ -127,9 +163,11 @@ if __name__ == "__main__":
     x, y = get_csv_data(filepath)
     slopes = find_slopes(x, y)
     # Plot the slopes to verify they are correct
-    plt.plot(slopes)
-    plt.show()
-    rc, dc = wavfile.read("Ctone.wav")
-    re, de = wavfile.read("Etone.wav")
-    ra, da = wavfile.read("Atone.wav")
-    play_slope(slopes, fs)
+#    plt.plot(slopes)
+#    plt.show()
+#    rc, dc = wavfile.read("Ctone.wav")
+#    re, de = wavfile.read("Etone.wav")
+#    ra, da = wavfile.read("Atone.wav")
+#    play_slope(slopes, fs)
+    randvar = np.random.normal(0, 1, 100)
+    bin_data(randvar, 10, .5)
