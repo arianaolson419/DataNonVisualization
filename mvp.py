@@ -168,7 +168,7 @@ def play_from_point(sound, pitch_shifts, speed, x_coord=0):
     for pitch in pitch_shifts[0:]:
         sound.pitch_shift = pitch
         print(pitch)
-        time.sleep(1000 / speed)
+        time.sleep(1 / speed)
 
 
 if __name__ == "__main__":
